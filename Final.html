@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<div id="chartContainer">
+  <meta charset="utf-8">
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="http://dimplejs.org/dist/dimple.v2.1.6.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+  <h1>Data Visualization for analyzing the relationship between the performance of the baseball players and their weight
+
+  </h1>
+  <p>This visualization is provided to show the relationship between Batting Average and the weight of 1157 baseball players for one year. The points are colored according to the handedness of each player. 
+  </p>
+  <p>
+  It should be noted that in baseball, the home run is scored when the ball is hit in such a way that the batter is able to circle the bases and reach home safely in one play without any errors being committed by the defensive team in the process.
+  </p>
+  <p>
+ -From this graph, it seems that in most cases left-handed players perform better than right-handed players and those players who use both of their hands. It also appears that right handed playes in most cases have the poorest performance among other types of players.
+ <p>
+ -There is a negative correlation between batting average and the weight of the players. Players with less weight seem to have more number of batting average than others.
+  </p>
+  <style>
+  
+  svg{
+  	display : block;
+  	margin : auto;
+  }
+  
+
+  </style>
+  <script type="text/javascript">
+
+  var svg = dimple.newSvg( "#chartContainer", 920, 920 );
+     d3.csv("New_baseball_data.csv", function (data) {
+            data.forEach(function(d){
+            	d.avg = +d.avg;
+            	d.weight=+d.weight;
+            	d.weight_bin=+d.weight_bin;
+            	d.HR = +d.HR;
+            
+
+            });
+     		data = data.filter(function(d){
+     			if (d['avg'] !== 0){
+     				return d;
+     			}
+     		});
+            //group the data according to weight and handedness
+        		
+        					
+
+
+       	var mychart = new dimple.chart(svg,data);
+       	mychart.setBounds(60, 30, 650, 480)
+       	var x = mychart.addCategoryAxis("x","weight_bin");
+       	//x.overrideMin = 130;
+       	//x.overrideMax = 260;
+       	x.title = "Weight(pounds)";
+        x.fontSize = "13px";
+      	var y = mychart.addMeasureAxis("y","avg");
+      	y.title="Batting average"; 
+      	y.fontSize = "13px";  
+       	var series = mychart.addSeries(["weight_bin", "handedness"], dimple.plot.bubble);
+       	//add title to the graph
+        
+       	svg.append("text")
+        .attr("x", mychart._xPixels() + mychart._widthPixels() / 2)           
+        .attr("y", 18)
+        .attr("text-anchor", "middle")  
+        .style("font-size", "19px") 
+        .style("font-family", "sans-serif") 
+        .style("font-weight", "bold") 
+        .text("Batting Average Vs. Weight");
+
+       	var myLegend = mychart.addLegend(740, 70, 40, 200, "Right");
+       	mychart.draw();	
+       	series.shapes.style("stroke-width" , 4);
+       	mychart.legends = [];
+       	 svg.selectAll("title_text")
+          .data(["Click legend to","show or hide handedness"])
+          .enter()
+          .append("text")
+            .attr("x", 710)
+            .attr("y", function (d, i) { return 50 + i * 20; })
+            .style("font-family", "sans-serif")
+            .style("font-size", "11px")
+            .style("color", "Black")
+            .text(function (d) { return d; });		
+       	
+        var filterValues = dimple.getUniqueValues(data, "handedness");
+        // Get all the rectangles from our now orphaned legend
+        myLegend.shapes.selectAll("rect")
+        .style("fill", "stroke")
+        .style("stroke-width" , 4)
+        //this function create interactivity in the legend
+        .on("click", function (e) {
+           
+            var hide = false; 
+            var newFilters = [];
+            // If the filters contain the clicked shape hide it
+            filterValues.forEach(function (f) {
+              if (f === e.aggField.slice(-1)[0]) {
+                hide = true;
+              } else {
+                newFilters.push(f);
+              }
+            });
+            // show the legend or hide it
+            if (hide) {
+              d3.select(this).style("opacity", 0.2);
+            } else {
+              newFilters.push(e.aggField.slice(-1)[0]);
+              d3.select(this).style("opacity", 0.9);
+            }
+            // Update the filters
+            filterValues = newFilters;
+            // Filter the data
+            mychart.data = dimple.filterData(data, "handedness", filterValues);
+           
+            mychart.draw(800);
+
+          });
+            
+      });
+   
+       	</script>    
+       </div>
+       </html>
+            
